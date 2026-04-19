@@ -1,8 +1,8 @@
 (function () {
     'use strict'
 
-    let controller = null
-    const delay = ms => new Promise(res => setTimeout(res, ms))
+    let hoverTimer = null
+    const keepMuted = forbiddenConfig.getPluginSetting("tag-video", "keepMuted", false)
     const tagImgSelector = ".detail-header-image > img:not([placeholder]), .tag-card-header > img:not([placeholder])"
     const bgImgSelector = ".background-image-container > img:not([placeholder])"
 
@@ -16,32 +16,19 @@
 
     const intervalReplaceAll = () => setInterval(replaceAll, 500)
 
+    const startVideo = (video) => {
+        video.play()
+        video.muted = keepMuted;
+        video.currentTime = 0;
+    }
+
     async function playVideo(evt) {
-        const video = evt.target
-        // abort controller
-        if (controller) controller.abort()
-        controller = new AbortController()
-        const signal = controller.signal
-        try {
-            await delay(500)
-            if (!video.matches(":hover") || signal.aborted) {
-                video.muted = true
-                return
-            }
-            const keepMuted = forbiddenConfig.getPluginSetting("tag-video", "keepMuted", false)
-            await video.play()
-            video.muted = keepMuted
-            video.currentTime = 0
-        } catch {
-            // catch abort error, do nothing
-        }
+        clearTimeout(hoverTimer)
+        hoverTimer = setTimeout(() => startVideo(evt.target), 500)
     }
 
     const stopVideo = (evt) => {
-        if (controller) {
-            controller.abort()
-            controller = null
-        }
+        clearTimeout(hoverTimer)
         evt.target.muted = true
     }
 
@@ -56,8 +43,8 @@
         video.src = src
         video.poster = "/plugin/tag-video/assets/loading.svg"
         if (hover) {
-            video.addEventListener('mouseover', playVideo)
-            video.addEventListener('mouseout', stopVideo)
+            video.addEventListener('mouseenter', playVideo)
+            video.addEventListener('mouseleave', stopVideo)
         }
         // hide image for tag-cropper
         img.setAttribute("placeholder", "")
@@ -79,7 +66,6 @@
     PluginApi.Event.addEventListener("stash:location", (e) => pathSwitcher(e.detail.data.location.pathname))
     // gql findTag listener
     pathSwitcher(window.location.pathname)
-    replaceAll()
     document.addEventListener("visibilitychange", () => {
         const allVideos = document.querySelectorAll(".tag-video")
         if (document.hidden) {
