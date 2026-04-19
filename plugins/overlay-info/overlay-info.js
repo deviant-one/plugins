@@ -21,7 +21,9 @@ function overlay_info() {
     const overlayResolution = SceneSpecs?.props?.children?.[1]
     if (!overlayResolution) return SceneSpecs // fallthrough in case it's undefined?
     const resolution = getResolutionClassName(file.height)
-    overlayResolution.props.className += ` ${resolution}`
+    if (overlayResolution.props.className)
+      overlayResolution.props.className += ` ${resolution}`
+    else overlayResolution.props.className = resolution
     // pull codec info
     const codec = file?.video_codec?.toUpperCase()
     // add codec to overlay
