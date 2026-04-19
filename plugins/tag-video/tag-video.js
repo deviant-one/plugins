@@ -1,6 +1,7 @@
 (function () {
     'use strict'
 
+    let controller = null
     const delay = ms => new Promise(res => setTimeout(res, ms))
     const tagImgSelector = ".detail-header-image > img:not([placeholder]), .tag-card-header > img:not([placeholder])"
     const bgImgSelector = ".background-image-container > img:not([placeholder])"
@@ -16,19 +17,33 @@
     const intervalReplaceAll = () => setInterval(replaceAll, 500)
 
     async function playVideo(evt) {
-        const checkHover = () => (!video.matches(':hover')) ? stopVideo(evt) : true
         const video = evt.target
-        await delay(500)
-        if (!checkHover()) return
-        const keepMuted = forbiddenConfig.getPluginSetting("tag-video", "keepMuted", false)
-        video.muted = keepMuted
-        video.currentTime = 0
-        video.play()
-            .then(() => setInterval(checkHover, 200))
-            .catch(err => {})
+        // abort controller
+        if (controller) controller.abort()
+        controller = new AbortController()
+        const signal = controller.signal
+        try {
+            await delay(500)
+            if (!video.matches(":hover") || signal.aborted) {
+                video.muted = true
+                return
+            }
+            const keepMuted = forbiddenConfig.getPluginSetting("tag-video", "keepMuted", false)
+            await video.play()
+            video.muted = keepMuted
+            video.currentTime = 0
+        } catch {
+            // catch abort error, do nothing
+        }
     }
 
-    const stopVideo = (evt) => evt.target.muted = true
+    const stopVideo = (evt) => {
+        if (controller) {
+            controller.abort()
+            controller = null
+        }
+        evt.target.muted = true
+    }
 
     function replace(img, hover = false) {
         const src = img.getAttribute("src")
