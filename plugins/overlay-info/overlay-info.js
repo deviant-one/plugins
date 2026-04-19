@@ -18,18 +18,19 @@ function overlay_info() {
     const file = props.scene.files?.[0]
     if (!file) return SceneSpecs
     // get resolution classes
-    const overlayResolution = SceneSpecs.props.children[1]
+    const overlayResolution = SceneSpecs?.props?.children?.[1]
+    if (!overlayResolution) return SceneSpecs // fallthrough in case it's undefined?
     const resolution = getResolutionClassName(file.height)
-    overlayResolution.props.className += ` ${resolution}`
+    overlayResolution?.props?.className += ` ${resolution}`
     // pull codec info
-    const codec = file.video_codec.toUpperCase()
+    const codec = file?.video_codec?.toUpperCase()
     // add codec to overlay
     const overlayElem = React.createElement(
       "span",
       { className: `overlay-codec codec-${codec}` },
       codec
     )
-    SceneSpecs.props.children.unshift(overlayElem)
+    SceneSpecs?.props?.children?.unshift(overlayElem)
     return SceneSpecs
   }
 
