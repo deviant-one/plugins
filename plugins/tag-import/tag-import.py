@@ -23,7 +23,12 @@ BASEURL = "https://tags.feederbox.cc"
 # optimized - full resolution webp, but lightly compressed
 # original - Please no. This will bust my cache and the images go up to 5000x5000 @14MB ea
 
-QUALITY = "optimized";
+IMG_QUALITY = "optimized";
+
+# optimized (BETA) reencoded CRF32 vp9 (avg 50% space savings @ 90VMAF)
+# original 10MB ea
+# https://github.com/feederbox826/tags/blob/main/Technical.md#quality
+VID_QUALITY = "original";
 
 tagserv_s = requests.Session()
 # header not for analytics, but for bot protection bypass
@@ -43,10 +48,10 @@ def processFilename(media):
   hasVid = media["vid"] != ""
   # if DOWNLOAD_VIDEO_TAGS
   if (DOWNLOAD_VIDEO_TAGS and hasVid):
-    return f"/media/original/{media['vid']}";
+    return f"/media/{VID_QUALITY}/{media['vid']}";
   # video not desired, but img is available
   elif (hasImg):
-    return f"/media/{QUALITY}/{media['img']}";
+    return f"/media/{IMG_QUALITY}/{media['img']}";
   # only video, grab thumb of vid
   # only optimized, see https://github.com/feederbox826/tags/commit/3991cd6
   else:
@@ -85,7 +90,7 @@ def find_tag_videos():
 
 def syncTags():
   # precheck
-  if QUALITY == "original":
+  if IMG_QUALITY == "original":
     log.error("original quality is enabled, please contact me for fullsize archives")
   # pull remote tag list
   remoteTagReq = tagserv_s.get(BASEURL + "/tags-export.json")
