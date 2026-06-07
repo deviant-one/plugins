@@ -28,8 +28,10 @@ const get_skip_next = (obj) => obj?.custom_fields?.["skip_next"];
 const get_stashdb_id = (stashids) => stashids?.find(id => id.endpoint === "https://stashdb.org/graphql")?.stash_id
 
 // get skip_first and skip_next custom fields from studio hierarchy
-const getStudioSkip = id => csLib.callGQL({
-  query: `query ($id: ID!) {
+const getStudioSkip = id => {
+  if (!id) return Promise.resolve({ skip_first: undefined, skip_next: undefined, remote: Promise.resolve(undefined) });
+  return csLib.callGQL({
+    query: `query ($id: ID!) {
   findStudio(id: $id) {
     custom_fields
     stash_ids { stash_id endpoint }
@@ -38,17 +40,19 @@ const getStudioSkip = id => csLib.callGQL({
       stash_ids { stash_id endpoint }
     }
   }}`,
-  variables: { id }
-}).then(data => {
-  const studio = data.findStudio;
-  const parent = studio?.parent_studio;
-  const skip_first = get_skip_first(studio) ?? get_skip_first(parent);
-  const skip_next = get_skip_next(studio) ?? get_skip_next(parent);
-  const remote = !skip_first
-    ? getRemoteStudioSkip(studio.stash_ids, parent?.stash_ids)
-    : Promise.resolve(undefined);
-  return { skip_first, skip_next, remote };
-})
+    variables: { id }
+  }).then(data => {
+    const studio = data.findStudio;
+    if (!studio) return { skip_first: undefined, skip_next: undefined, remote: Promise.resolve(undefined) };
+    const parent = studio.parent_studio;
+    const skip_first = get_skip_first(studio) ?? get_skip_first(parent);
+    const skip_next = get_skip_next(studio) ?? get_skip_next(parent);
+    const remote = !skip_first
+      ? getRemoteStudioSkip(studio.stash_ids, parent?.stash_ids)
+      : Promise.resolve(undefined);
+    return { skip_first, skip_next, remote };
+  });
+}
 
 const getRemoteSkipTime = async (id) => fetch(`https://skips.feederbox.cc/api/time/${id}`)
   .then(res => res.json())
