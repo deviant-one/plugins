@@ -3,7 +3,7 @@ description: Skips static duration intros
 # requires: 0gql-intercept
 # requires: CommunityScriptsUILibrary
 # requires: fontawesome-js
-version: 0.4.0
+version: 0.4.1
 ui:
   requires:
     - CommunityScriptsUILibrary
