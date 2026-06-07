@@ -1,11 +1,13 @@
 # skip-intro
 
-# v0.3
+# v0.4
 
 > [!WARNING]
 > Stash v0.31+ ONLY
 
-Reads from the custom_field `skip_first` which is a number for how many seconds to skip ahead. In order of priority:
+## skip_first
+
+Reads from the custom_field `skip_first` which is a number for how many seconds to skip ahead at the start of a scene. In order of priority:
 1. Scene
 2. Studio
 3. Parent of Studio
@@ -14,6 +16,15 @@ Reads from the custom_field `skip_first` which is a number for how many seconds 
 
 If there is no `skip_first` at a lower level, it will default to the higher level until a value is found.
 If no results are found locally, skips-db is queried at the studio and parent studio level.
+
+## skip_next
+
+Reads from the custom_field `skip_next` which is a number (seconds from the start of the file) at which to advance to the next scene in the queue. Useful for skipping outros. In order of priority:
+1. Scene
+2. Studio
+3. Parent of Studio
+
+No remote fallback — skips-db only stores `skip_first` values.
 
 After pausing, you can use the following command to get the time to skip to.
 ```js
